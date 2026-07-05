@@ -11,10 +11,11 @@ export async function profileAttr (e) {
   let game = /遗器/.test(msg) ? 'sr' : 'gs'
   e.isSr = game === 'sr'
 
-  let match = /^#(.+?)(圣遗物|遗器)初始值/.exec(msg)
+  let match = /^#(.+?)(圣遗物|遗器)(初始值|成长值)/.exec(msg)
   if (!match) return false
 
   let charInput = match[1].trim()
+  let isGrowth = match[3] === '成长值'
   let char = Character.get(charInput, game)
   if (!char) {
     e.reply(`未找到角色「${charInput}」`)
@@ -32,7 +33,7 @@ export async function profileAttr (e) {
   }
 
   if (game === 'gs') {
-    return showGsAttr(e, profile, char)
+    return isGrowth ? showGsGrowth(e, profile, char) : showGsAttr(e, profile, char)
   } else {
     return showSrAttr(e, profile, char)
   }
@@ -59,10 +60,16 @@ function showGsAttr (e, profile, char) {
     let mainVal = fmtMainGs(arti.mainId, arti.level || 0, star)
     let posLine = `${idx} | ${mainTitle} ${mainVal}`
 
-    // 初始副词条：前 (总条数 - 强化次数) 项
-    let enhanceCount = Math.floor((arti.level || 0) / 4)
-    let initialCount = Math.min((arti.attrIds || []).length - enhanceCount, 4)
-    let initialIds = (arti.attrIds || []).slice(0, initialCount)
+    // 初始副词条：取 attrIds 中首次出现的不重复 key（遇重复即止）
+    let initialIds = []
+    let seen = new Set()
+    ;(arti.attrIds || []).forEach(id => {
+      let cfg = attrIdMap[id]
+      if (!cfg) return
+      if (seen.has(cfg.key)) return false  // 重复 key = 强化追加，停止
+      seen.add(cfg.key)
+      initialIds.push(id)
+    })
 
     if (initialIds.length === 0) {
       lines.push(`${posLine} | (无)`)
@@ -82,6 +89,36 @@ function showGsAttr (e, profile, char) {
     subs.forEach(s => {
       lines.push(`  ${s.key} ${s.val}`)
     })
+  }
+
+  e.reply(lines.join('\n'))
+  return true
+}
+
+function showGsGrowth (e, profile, char) {
+  let artis = profile.artis || profile._artis || []
+  let { attrMap, attrIdMap } = Meta.getMeta('gs', 'arti')
+  let lines = [`—— ${char.name} 圣遗物成长值 ——`]
+
+  // 按 key 收集所有位置的强化顺序
+  let rollsByKey = new Map()
+  for (let idx = 1; idx <= 5; idx++) {
+    let arti = artis[idx]
+    if (!arti || !arti.attrIds) continue
+    arti.attrIds.forEach(id => {
+      let cfg = attrIdMap[id]
+      if (!cfg) return
+      let key = cfg.key
+      let val = cfg.value * (attrMap[key]?.format === 'pct' ? 100 : 1)
+      if (!rollsByKey.has(key)) rollsByKey.set(key, [])
+      rollsByKey.get(key).push(Format.comma(val, 1))
+    })
+  }
+
+  for (let [key, vals] of rollsByKey) {
+    let title = attrMap[key]?.title || key
+    let chain = vals.map(v => `${title} ${v}`).join(' -> ')
+    lines.push(chain)
   }
 
   e.reply(lines.join('\n'))

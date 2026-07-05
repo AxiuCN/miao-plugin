@@ -78,9 +78,9 @@ app.reg({
   },
 
   profileAttr: {
-    name: '圣遗物初始值',
+    name: '圣遗物初始值/成长值',
     fn: profileAttr,
-    rule: /^#.+?(圣遗物|遗器)初始值$/
+    rule: /^#.+?(圣遗物|遗器)(初始值|成长值)$/
   },
 
   profileStat: {
