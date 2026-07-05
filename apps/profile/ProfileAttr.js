@@ -60,13 +60,18 @@ function showGsAttr (e, profile, char) {
     let mainVal = fmtMainGs(arti.mainId, arti.level || 0, star)
     let posLine = `${idx} | ${mainTitle} ${mainVal}`
 
-    // 初始副词条：取 attrIds 中首次出现的不重复 key（遇重复即止）
+    // 初始副词条：判断3词条/4词条初始，取真正的0级初始值
     let initialIds = []
     let seen = new Set()
+    let level = arti.level || 0
+    let totalRolls = (arti.attrIds || []).length
+    let is4Start = totalRolls === 4 + level / 4  // 4词条初始: 4 + level/4 条记录
+    let initialCount = is4Start ? 4 : 3
     ;(arti.attrIds || []).forEach(id => {
       let cfg = attrIdMap[id]
       if (!cfg) return
-      if (seen.has(cfg.key)) return false  // 重复 key = 强化追加，停止
+      if (seen.has(cfg.key)) return  // 重复 key = 强化追加
+      if (seen.size >= initialCount) return false  // 已取够初始词条数，停止
       seen.add(cfg.key)
       initialIds.push(id)
     })
@@ -97,15 +102,28 @@ function showGsAttr (e, profile, char) {
 
 function showGsGrowth (e, profile, char) {
   let artis = profile.artis || profile._artis || []
-  let { attrMap, attrIdMap } = Meta.getMeta('gs', 'arti')
+  let { mainIdMap, attrMap, attrIdMap } = Meta.getMeta('gs', 'arti')
+  let star = 5
   let lines = [`—— ${char.name} 圣遗物成长值 ——`]
 
-  // 按 key 收集所有位置的强化顺序
-  let rollsByKey = new Map()
-  for (let idx = 1; idx <= 5; idx++) {
+  let maxIdx = artis.length || Object.keys(artis).length || 5
+  for (let idx = 1; idx <= maxIdx; idx++) {
     let arti = artis[idx]
     if (!arti || !arti.attrIds) continue
-    arti.attrIds.forEach(id => {
+
+    star = arti.star || star
+
+    // 主词条
+    let mainKey = mainIdMap[arti.mainId]
+    if (!mainKey) continue
+    if (Format.isElem(mainKey, 'gs')) mainKey = 'dmg'
+    let mainTitle = attrMap[mainKey]?.title || mainKey
+    let mainVal = fmtMainGs(arti.mainId, arti.level || 0, star)
+    let posLine = `${idx} | ${mainTitle} ${mainVal}`
+
+    // 按 key 收集该位置的强化链
+    let rollsByKey = new Map()
+    ;(arti.attrIds || []).forEach(id => {
       let cfg = attrIdMap[id]
       if (!cfg) return
       let key = cfg.key
@@ -113,12 +131,17 @@ function showGsGrowth (e, profile, char) {
       if (!rollsByKey.has(key)) rollsByKey.set(key, [])
       rollsByKey.get(key).push(Format.comma(val, 1))
     })
-  }
 
-  for (let [key, vals] of rollsByKey) {
-    let title = attrMap[key]?.title || key
-    let chain = vals.map(v => `${title} ${v}`).join(' -> ')
-    lines.push(chain)
+    if (rollsByKey.size === 0) {
+      lines.push(`${posLine} | (无)`)
+      continue
+    }
+
+    lines.push(`${posLine}`)
+    for (let [key, vals] of rollsByKey) {
+      let title = attrMap[key]?.title || key
+      lines.push(`  ${title} ${vals.join(' -> ')}`)
+    }
   }
 
   e.reply(lines.join('\n'))
