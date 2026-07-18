@@ -60,6 +60,12 @@ function showGsAttr (e, profile, char) {
     let mainVal = fmtMainGs(arti.mainId, arti.level || 0, star)
     let posLine = `${idx} | ${mainTitle} ${mainVal}`
 
+    // 非 Enka 数据源 attrIds 可能乱序，跳过
+    if (profile._source && profile._source !== 'enka') {
+      lines.push(`${posLine} | (非Enka数据，请用 #更新面板 刷新)`)
+      continue
+    }
+
     // 初始副词条：判断3词条/4词条初始，取真正的0级初始值
     let initialIds = []
     let seen = new Set()
@@ -120,6 +126,12 @@ function showGsGrowth (e, profile, char) {
     let mainTitle = attrMap[mainKey]?.title || mainKey
     let mainVal = fmtMainGs(arti.mainId, arti.level || 0, star)
     let posLine = `${idx} | ${mainTitle} ${mainVal}`
+
+    // 非 Enka 数据源 attrIds 可能乱序，跳过
+    if (profile._source && profile._source !== 'enka') {
+      lines.push(`${posLine} | (非Enka数据，请用 #更新面板 刷新)`)
+      continue
+    }
 
     // 按 key 收集该位置的强化链
     let rollsByKey = new Map()
