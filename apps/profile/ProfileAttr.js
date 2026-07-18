@@ -61,8 +61,8 @@ function showGsAttr (e, profile, char) {
     let posLine = `${idx} | ${mainTitle} ${mainVal}`
 
     // 非 Enka 数据源 attrIds 可能乱序，跳过
-    if (profile._source && profile._source !== 'enka') {
-      lines.push(`${posLine} | (非Enka数据，请用 #更新面板 刷新)`)
+    if (/^(mys|mysPanel)$/.test(profile._source)) {
+      lines.push(`${posLine} | (米游社数据不支持，请用 #更新面板 刷新)`)
       continue
     }
 
@@ -128,8 +128,8 @@ function showGsGrowth (e, profile, char) {
     let posLine = `${idx} | ${mainTitle} ${mainVal}`
 
     // 非 Enka 数据源 attrIds 可能乱序，跳过
-    if (profile._source && profile._source !== 'enka') {
-      lines.push(`${posLine} | (非Enka数据，请用 #更新面板 刷新)`)
+    if (/^(mys|mysPanel)$/.test(profile._source)) {
+      lines.push(`${posLine} | (米游社数据不支持，请用 #更新面板 刷新)`)
       continue
     }
 
