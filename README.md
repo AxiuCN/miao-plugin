@@ -1,112 +1,149 @@
-# Miao-Plugin 说明
+# miao-plugin / 喵喵插件
 
-`miao-plugin`是一个`Yunzai-Bot`的升级插件，提供包括角色面板、角色查询等角色相关功能。
+> 基于 [yoimiya-kokomi/miao-plugin](https://github.com/yoimiya-kokomi/miao-plugin) 的 fork 改版，由 [AxiuCN](https://github.com/AxiuCN) 维护，接入 TRSS-Yunzai v3。
 
-具体功能可在安装插件后 通过 `#喵喵帮助` 进行查看。如需进行设置则可通过 `#喵喵设置` 命令进行管理。
+`miao-plugin` 是 `Yunzai-Bot` 的升级插件，提供原神 / 星铁角色面板查询、伤害计算、圣遗物评分等角色相关功能。本 fork 在保留上游全部能力的基础上，新增了**面板变换**、**指定面板图**、**最高分 / 最强面板**等特色功能。
 
----
+具体功能可在安装插件后通过 `#喵喵帮助` 查看，设置通过 `#喵喵设置` 管理。
 
-## 安装与更新
+> 更多上游功能与完整使用说明参见 [原版 README（yoimiya-kokomi）](README_yoimiya-kokomi.md)。
 
-### 使用Git安装（推荐）
+## 安装
 
-请将 miao-plugin 放置在 Yunzai-Bot 的 plugins 目录下，重启 Yunzai-Bot 后即可使用。
+将 miao-plugin 放置在 Yunzai-Bot 的 `plugins` 目录下，重启 Yunzai-Bot 后即可使用。在 Yunzai 根目录执行下述任一命令：
 
-请使用 git 进行安装，以方便后续升级。在 Yunzai-Bot 根目录夹打开终端，运行下述指令之一
-
-```
-// 使用 GitHub
+```bash
+# GitHub（主仓库）
 git clone --depth=1 https://github.com/AxiuCN/miao-plugin.git plugins/miao-plugin
 pnpm install -P
 
-// 使用 Gitee
+# Gitee（备份源）
 git clone --depth=1 https://gitee.com/AxiuCN/miao-plugin plugins/miao-plugin
+pnpm install -P
+
+# GitCode（备份源）
+git clone --depth=1 https://gitcode.com/AxiuCN/miao-plugin.git plugins/miao-plugin
 pnpm install -P
 ```
 
-进行安装。安装完毕后，管理员只需发送 `#喵喵更新` 即可自动更新 miao-plugin。
+安装完毕后，管理员发送 `#喵喵更新` 即可自动更新。
 
-注：目前 Gitcode 源无法使用，需要换源，在云崽目录执行
+**切换源**：默认源不可用时，可在云崽目录执行换源命令：
 
-```
-// 使用 GitHub
+```bash
+# 换到 GitHub
 git -C plugins/miao-plugin remote set-url origin https://github.com/AxiuCN/miao-plugin.git
 
-// 使用 Gitee
+# 换到 Gitee
 git -C plugins/miao-plugin remote set-url origin https://gitee.com/AxiuCN/miao-plugin
+
+# 换到 GitCode
+git -C plugins/miao-plugin remote set-url origin https://gitcode.com/AxiuCN/miao-plugin.git
 ```
 
-### 手工下载安装（不推荐）
+## 功能
 
-手工下载安装包，解压后将`miao-plugin-master`更名为`miao-plugin`，然后放置在Yunzai的plugins目录内
+### Fork 特有功能
 
-虽然此方式能够使用，但无法使用`#喵喵更新`进行更新，不利于后续升级，故不推荐使用
+#### 面板变换
 
----
+通过 `换` / `补` / `变` / `改` 关键字对查询的面板进行变换，支持换装、属性数值变换，并在伤害旁显示变化百分比（↑/↓）。
 
-## Yunzai版本与支持
+| 指令 | 说明 |
+|------|------|
+| `#胡桃面板 换少女头` | 面板换装 |
+| `#胡桃面板 +30暴击 -10%大攻击` | 属性数值变换（`+`/`-` 前缀；百分比仅对 atk/hp/def 按基础值计算） |
+| 直接发送面板截图 | 触发 OCR 图片识别，自动解析并应用变换 |
 
-`miao-plugin` 支持V3 / V2 版本的Yunzai-Bot
+- 支持换武器、换圣遗物、换命座、属性变换的组合叠加
+- 面板变换构建"虚拟面板"，不修改已获取的真实面板数据
+- 变换后面板可与原面板对比，伤害数字旁显示差异（绿色 ↑ / 红色 ↓）
 
-* [Miao-Yunzai](https://github.com/yoimiya-kokomi/Miao-Yunzai) : 喵版Yunzai [Gitee](https://gitee.com/yoimiya-kokomi/Miao-Yunzai)
-  / [Github](https://github.com/yoimiya-kokomi/Miao-Yunzai) ，本体不含签到功能，功能迭代较多，与miao-plugin打通，只建议新部署/迁移
-* [Yunzai-V3](https://github.com/yoimiya-kokomi/Yunzai-Bot) ：Yunzai V3 - 喵喵维护版，icqq版本，与原版Yunza功能基本一致，会保持卡池更新，功能相对稳定，可从原版Yunzai换源直接升级
-* [Yunzai-V3](https://gitee.com/Le-niao/Yunzai-Bot) ：Yunzai V3 - 乐神原版，oicq版本，可能会遇到登录问题
+#### 指定面板图
 
----
+查询面板时可携带 `面板图N` 独立 token（空格分隔，可出现在命令任意位置），指定使用 [ProfileImg-Plugin](https://github.com/AxiuCN/ProfileImg-Plugin) 图库中编号为 N 的面板图：
 
-## 功能说明
+| 指令 | 说明 |
+|------|------|
+| `#胡桃面板 面板图1` | 使用图库编号 1 的面板图 |
+| `#胡桃面板 面板图1 换少女头` | 指定面板图 + 换装变换（顺序无关） |
+| `#胡桃圣遗物 面板图3` | 圣遗物模式 + 指定面板图 |
 
-### #雷神面板
+- 编号 N 对应 ProfileImg-Plugin 主图库文件名中的序号（`角色名_n_作者_来源.ext`）
+- 未指定时保持随机选图（向后兼容）；序号不存在时静默回退随机
+- 依赖 ProfileImg-Plugin 主图库，未安装时忽略该 token
+
+#### 最高分 / 最强面板
+
+| 指令 | 说明 |
+|------|------|
+| `#我的胡桃最高分面板魔女4` | 回溯搜索圣遗物组合，评分最高的搭配 |
+| `#我的胡桃最强面板魔女4` | 枚举散件位配置 × 坐标上升收敛，求伤害最高的搭配（需指定套装） |
+
+- 最高分面板：mark 评分最大化，纯评分搜索
+- 最强面板：同时评估伤害，结果确定可复现（非随机）
+
+#### 圣遗物初始值 / 成长值
+
+| 指令 | 说明 |
+|------|------|
+| `#胡桃圣遗物初始值` | 查看圣遗物词条初始值 |
+| `#丝柯克圣遗物成长值` | 查看圣遗物词条成长值 |
+
+### 通用功能
+
+#### 面板查询
 
 使用指令 `#面板帮助` 即可了解如何使用此功能。
 
-#### #更新面板
+| 指令 | 说明 |
+|------|------|
+| `#雷神面板` | 查询角色面板（默认随机面板图，可加 `面板图N` 指定） |
+| `#更新面板` | 刷新游戏橱窗详情数据 |
+| `#雷神伤害` | 伤害计算（本地计算，可指定伤害序号 `#雷神伤害3`） |
+| `#雷神圣遗物` | 圣遗物模式（喵喵版评分规则） |
 
-`#更新面板` 依赖于面板查询API，面板服务由 http://enka.network/ 提供。
+`#更新面板` 依赖于面板查询 API，默认由 http://enka.network/ 提供。可发送 `#喵喵设置面板服务332` 将国服&B服的面板查询切换到 `MiniGG-Api` 处理。
 
-> 查询功能经Enka官方授权([issue#63](https://github.com/yoimiya-kokomi/miao-plugin/issues/63#issuecomment-1199348789))，感谢Enka提供的面板查询服务
->
-> 如果可以的话，也请在Patreon上支持Enka，或提供闲置的原神账户，具体可在[Enka官网](http://enka.network/) Discord联系
->
-> [issue#63](https://github.com/yoimiya-kokomi/miao-plugin/issues/63#issuecomment-1199734496)
+#### 其他功能
 
-> 可尝试使用`MiniGG-Api`面板服务 [@MiniGrayGay](https://github.com/MiniGrayGay)<br>
-> 发送 `#喵喵设置面板服务332` 修改国服&B服的面板查询由 `MiniGG-Api` 处理
+| 模块 | 说明 |
+|------|------|
+| 角色查询 | `#喵喵角色` 查看角色信息、老婆系统、原图 |
+| 抽卡统计 | `#喵喵抽卡记录` / `#喵喵抽卡统计`（原神 / 星铁） |
+| 深渊统计 | `#喵喵深渊统计`、幻想真境剧诗 / 幽境危战统计、角色卡 |
+| 角色资料 | `#喵喵WIKI`、角色/天赋材料日历、今日素材 |
+| 喵喵设置 | `#喵喵设置`、`#喵喵更新`、`#喵喵帮助` |
 
-#### #雷神伤害
+## 面板服务
 
-喵喵面板附带的伤害计算功能由喵喵本地计算。如计算有偏差 #雷神伤害 查看伤害加成信息，如确认伤害计算有误可提供伤害录屏截图及uid进行反馈
+支持多面板服务源，发送 `#喵喵设置面板服务{编号}` 切换：
 
-#### #雷神圣遗物
+| 服务 | 原神 | 星铁 |
+|------|------|------|
+| Enka | Enka.Network | - |
+| Enka HSR | - | Enka HSR |
+| MiniGG-Api | MiniGG-Api | - |
+| 喵喵 API | 需 token | 喵喵 API |
+| Hutao-Enka | 胡桃 API | - |
+| Mihomo / Avocado | - | 星铁面板服务 |
+| 米游社 | 米游社面板 | 米游社面板 |
 
-圣遗物评分为喵喵版评分规则
+## 配置
 
----
+- **面板设置**：`#喵喵设置` 命令可视化配置（面板服务、面板替换、原图、练度统计等）
+- **锅巴后台**：支持 [Guoba-Plugin](https://github.com/guoba-yunzai/Guoba-Plugin) 可视化配置
+- **自定义配置**：编辑 `config/profile.js`、`config/character_default.js`（角色/别名）
 
-**在有一定阅读理解能力基础下，建议阅读 [CHANGELOG.md](CHANGELOG.md) 以了解更多内容。**
+## 免责声明
 
-其余文档咕咕咕中
+1. `miao-plugin` 自身的 UI 与代码均开放，无需征得特殊同意，可任意使用。能备注来源最好，但不强求
+2. 以上声明仅代表 `miao-plugin` 自身的范畴，请尊重 Yunzai 本体及其他插件作者的努力，勿将 Yunzai 及其他插件用于以盈利为目的的场景
+3. miao-plugin 的图片与其他素材均来自于网络，仅供交流学习使用，如有侵权请联系，会立即删除
 
----
+## 鸣谢
 
-# 免责声明
-
-1. `miao-plugin`自身的UI与代码均开放，无需征得特殊同意，可任意使用。能备注来源最好，但不强求
-2. 以上声明但仅代表`miao-plugin`自身的范畴，请尊重Yunzai本体及其他插件作者的努力，勿将Yunzai及其他插件用于以盈利为目的的场景
-3. miao-plugin的图片与其他素材均来自于网络，仅供交流学习使用，如有侵权请联系，会立即删除
-
-# 资源
-
-* [Miao-Yunzai](https://github.com/yoimiya-kokomi/Miao-Yunzai) : 喵版Yunzai [Gitee](https://gitee.com/yoimiya-kokomi/Miao-Yunzai)
-  / [Github](https://github.com/yoimiya-kokomi/Miao-Yunzai)
-* [Yunzai-V3](https://github.com/yoimiya-kokomi/Yunzai-Bot) ：Yunzai V3 - 喵喵维护版（使用 icqq）
-* [Yunzai-V3](https://gitee.com/Le-niao/Yunzai-Bot) ：Yunzai V3 - 乐神原版（使用 oicq）
-* [miao-plugin](https://github.com/yoimiya-kokomi/miao-plugin) : 喵喵插件 [Gitee](https://gitee.com/yoimiya-kokomi/miao-plugin)
-  / [Github](https://github.com/yoimiya-kokomi/miao-plugin)
-
-# 其他&感谢
-
-* [Enka.Network](https://enka.network/): 感谢Enka提供的面板服务
-* [Snap.Hutao](https://hut.ao/) : 感谢 DGP Studio 开发的 [胡桃 API](https://github.com/DGP-Studio/Snap.Hutao.Server)
-
+- [yoimiya-kokomi/miao-plugin](https://github.com/yoimiya-kokomi/miao-plugin) — 上游原版，本 fork 的基础
+- [Enka.Network](https://enka.network/) — 感谢 Enka 提供的面板服务
+- [ark-plugin](https://github.com/NotIvny/ark-plugin) — 面板变换伤害差异显示与 OCR 图片识别
+- [ProfileImg-Plugin](https://github.com/AxiuCN/ProfileImg-Plugin) — 面板图图库管理器，`面板图N` 指定功能的依赖
