@@ -83,6 +83,31 @@ const CharImg = {
     }
   },
 
+  // 按序号选择指定面板图（ProfileImg 格式：角色名_n_作者_来源.ext），找不到返回 false
+  getImgByIndex (imgPaths, index) {
+    for (let imgPath of imgPaths) {
+      if (!fs.existsSync(`${rPath}/${imgPath}`)) {
+        continue
+      }
+      // 从路径尾段取角色名（profile/normal-character/{name}）
+      let roleName = imgPath.split('/').pop()
+      let esc = roleName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+      // 匹配 角色名_n_... 或 角色名_n.ext（标准命名，n 即 ProfileImg 的 display n）
+      let seqReg = new RegExp(`^${esc}_(\\d+)(?:_|\\.)`, 'i')
+      let imgs = fs.readdirSync(`${rPath}/${imgPath}`).filter((file) => {
+        return /\.(png|webp)$/.test(file)
+      })
+      let target = imgs.find((file) => {
+        let m = file.match(seqReg)
+        return m && parseInt(m[1], 10) === index
+      })
+      if (target) {
+        return `${imgPath}/${encodeURIComponent(target)}`
+      }
+    }
+    return false
+  },
+
   // 获取角色的图像资源数据
   getImgs (name, costumeIdx = '', travelerElem = '', weaponType = 'sword', talentCons) {
     let fileType = 'webp'

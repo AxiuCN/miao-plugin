@@ -120,6 +120,17 @@ const ProfileAvatar = {
           break
       }
     }
+    // 指定面板图：按序号选图，找不到回退随机
+    if (profile._panelImgIdx && profile._panelImgIdx > 0) {
+      let imgPaths = isSuper
+        ? [`profile/super-character/${name}`, `profile/normal-character/${name}`]
+        : [`profile/normal-character/${name}`]
+      let result = CharImg.getImgByIndex(imgPaths, profile._panelImgIdx)
+      if (result) {
+        return result
+      }
+    }
+
     if (isSuper) {
       return CharImg.getRandomImg(
         [`profile/super-character/${name}`, `profile/normal-character/${name}`],

@@ -22,6 +22,18 @@ let ProfileDetail = {
       return false
     }
 
+    // 提取面板图序号（独立 token，空格分隔），如 "面板图3"
+    let imgIdx = 0
+    let imgRet = /(?:^|\s)面板图(\d+)(?:\s|$)/.exec(msg)
+    if (imgRet) {
+      imgIdx = parseInt(imgRet[1])
+      if (imgIdx > 0) {
+        // 从 msg 中移除 面板图N token，清理多余空格，后续模式解析不受影响
+        msg = msg.replace(/\s*面板图\d+\s*/g, ' ').replace(/\s+/g, ' ').trim()
+        e._panelImgIdx = imgIdx
+      }
+    }
+
     // 最高分/最强面板：早期分流
     let maxRet = /^#(?:星铁|原神)?我的(.+?)(最高分|最强)面板(\d*)\s*(.*)$/.exec(msg)
     if (maxRet) {
@@ -167,6 +179,14 @@ let ProfileDetail = {
       await ProfileList.refresh(e)
       return true
     } else if (mode === 'artis') {
+      // 圣遗物模式使用 profile.costumeSplash，需带上指定面板图序号
+      if (e._panelImgIdx && !e._profile) {
+        let profile = await getProfileRefresh(e, char.id)
+        if (profile) {
+          profile._panelImgIdx = e._panelImgIdx
+          e._profile = profile
+        }
+      }
       return profileArtis(e)
     }
     return true
@@ -251,6 +271,13 @@ let ProfileDetail = {
     artisDetail.allAttr = allAttr
 
     let artisKeyTitle = Artifact.getArtisKeyTitle(game)
+    // 指定面板图：将面板图序号传递到 profile，供 costumeSplash 选择
+    if (e._panelImgIdx) {
+      profile._panelImgIdx = e._panelImgIdx
+    }
+    if (e._profile && e._panelImgIdx) {
+      e._profile._panelImgIdx = e._panelImgIdx
+    }
     let data = profile.getData('name,abbr,cons,level,talent,dataSource,updateTime,imgs,costumeSplash')
     if (isSr) {
       let treeData = []
