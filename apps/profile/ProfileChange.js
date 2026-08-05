@@ -468,7 +468,7 @@ const ProfileChange = {
       try {
         const controller = new AbortController()
         const timeout = setTimeout(() => controller.abort(), 15000)
-        const response = await fetch(`https://ark.ivny.top/ocr/profilechange/${game}`, {
+        const response = await fetch(`https://ark.ivny.cn/ocr/profilechange/${game}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ image: imageUrl }),
