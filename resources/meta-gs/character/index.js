@@ -1,12 +1,15 @@
 import lodash from 'lodash'
 import { Data, Meta } from '#miao'
 import { alias } from './alias.js'
+import { addNanoPending } from './fork-nano.js'
 import { extraChars, wifeCfg } from './extra.js'
 
 let data = Data.readJSON('resources/meta-gs/character/data.json', 'miao')
 let meta = Meta.create('gs', 'char')
 
 meta.addData(data)
+// 从 nanoka 补缺注册上游未更新的角色（上游更新后自动跳过）
+addNanoPending(meta)
 meta.addAlias(alias)
 
 // 导入主角天赋对应元素，以据此判断主角元素
