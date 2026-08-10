@@ -3,7 +3,8 @@
 *
 * 场景：上游 miao-plugin 尚未更新角色数据（如 7.0 奥黛塔/阿罗夏），
 * 而 nanoka 图鉴数据已收录。启动时扫描 nanoka 角色目录，对 miao 缺失的
-* 角色注册基础信息（id/星级/元素/武器），使其可通过 面板变换 查询。
+* 角色注册基础信息（id/星级/元素/武器）及完整等级属性表，使其可通过
+* 面板变换 查询。
 *
 * 过渡性：上游更新后（data.json 已存在该角色）自动跳过，不覆盖上游数据。
 * 独立性：Atlas-Plugin 数据目录缺失/读取失败时静默跳过，不影响其他功能。
@@ -25,6 +26,75 @@ const WEAPON_MAP = {
 
 // nanoka 稀有度 → 星级
 const STAR_MAP = { 五星: 5, 四星: 4, 三星: 3 }
+
+// nanoka 突破成长属性字段 → miao 属性 key（mul：百分比型 ×100，数值型 ×1）
+const GROW_MAP = [
+  { field: 'fight_prop_critical_hurt', key: 'cdmg', mul: 100 },
+  { field: 'fight_prop_critical_chance', key: 'cpct', mul: 100 },
+  { field: 'fight_prop_hp_percent', key: 'hpPct', mul: 100 },
+  { field: 'fight_prop_attack_percent', key: 'atkPct', mul: 100 },
+  { field: 'fight_prop_defense_percent', key: 'defPct', mul: 100 },
+  { field: 'fight_prop_charge_efficiency', key: 'recharge', mul: 100 },
+  { field: 'fight_prop_elemental_mastery', key: 'mastery', mul: 1 },
+  { field: 'fight_prop_heal_add', key: 'heal', mul: 1 }
+]
+
+// nanoka ascension 基础属性键名（全称）
+const ASC_KEY = { hp: 'fight_prop_base_hp', atk: 'fight_prop_base_attack', def: 'fight_prop_base_defense' }
+
+// miao attr.details 档位 → 突破次数（0 = 未突破）
+const KEY_ASC = {
+  '1': 0, '20': 0, '20+': 1, '40': 1, '40+': 2, '50': 2, '50+': 3,
+  '60': 3, '60+': 4, '70': 4, '70+': 5, '80': 5, '80+': 6, '90': 6, '90+': 6, '100': 6
+}
+// miao attr.details 档位 → 等级
+const KEY_LV = {
+  '1': 1, '20': 20, '20+': 20, '40': 40, '40+': 40, '50': 50, '50+': 50,
+  '60': 60, '60+': 60, '70': 70, '70+': 70, '80': 80, '80+': 80, '90': 90, '90+': 90, '100': 100
+}
+
+// hp 取整（与 miao 数据一致），其他保留 2 位小数
+const fmtHp = (v) => Math.round(v)
+const fmt2 = (v) => Math.round(v * 100) / 100
+
+/**
+ * 从 nanoka 角色详情生成 miao 属性表
+ * 公式：属性(lv, 突破次数) = base_1 × 曲线[lv] + ascension[突破次数-1]
+ * @param {object} nanoDetail - nanoka 角色 content.detail
+ * @returns {object|false} miao 属性结构（baseAttr/growAttr/attr），数据缺失时返回 false
+ */
+function buildDetail (nanoDetail) {
+  let sm = nanoDetail.stats_modifier || {}
+  let base = { hp: nanoDetail.base_hp, atk: nanoDetail.base_atk, def: nanoDetail.base_def }
+  let curve = { hp: sm.hp, atk: sm.atk, def: sm.def }
+  let asc = sm.ascension || []
+  // 成长属性：asc[0] 除 base 三键外的字段
+  let grow = GROW_MAP.find(g => g.field in (asc[0] || {})) || null
+  if (!grow || !base.hp || !curve.hp || !curve.atk || !curve.def) {
+    return false
+  }
+  let details = {}
+  for (let key of Object.keys(KEY_ASC)) {
+    let lv = KEY_LV[key]
+    let add = KEY_ASC[key] > 0 ? (asc[KEY_ASC[key] - 1] || {}) : {}
+    details[key] = [
+      fmtHp(base.hp * curve.hp[String(lv)] + (add[ASC_KEY.hp] || 0)),
+      fmt2(base.atk * curve.atk[String(lv)] + (add[ASC_KEY.atk] || 0)),
+      fmt2(base.def * curve.def[String(lv)] + (add[ASC_KEY.def] || 0)),
+      fmt2((add[grow.field] || 0) * grow.mul)
+    ]
+  }
+  let d90 = details['90']
+  let d100 = details['100']
+  return {
+    baseAttr: { hp: d100[0], atk: d100[1], def: d100[2] },
+    growAttr: { key: grow.key, value: d90[3] },
+    attr: {
+      keys: ['hpBase', 'atkBase', 'defBase', grow.key],
+      details
+    }
+  }
+}
 
 /**
  * 从 nanoka 补缺注册缺失角色
@@ -72,13 +142,16 @@ export function addNanoPending (meta) {
         continue
       }
       let detail = ds.content?.detail || {}
+      // 从 nanoka 生成属性表，缺失时退回仅注册基础信息（面板属性显示 NaN）
+      let attrDetail = buildDetail(detail)
       meta.addDataItem(id, {
         id: id * 1,
         name,
         abbr: name,
         star: STAR_MAP[ds.meta.rarity] || 5,
         elem: (detail.element || '').toLowerCase(),
-        weapon: WEAPON_MAP[detail.weapon] || ''
+        weapon: WEAPON_MAP[detail.weapon] || '',
+        ...(attrDetail ? { _detail: attrDetail } : {})
       })
       logger?.info(`[miao] nanoka 补缺注册角色: ${name} (${id})`)
     }
