@@ -101,7 +101,7 @@ function buildDetail (nanoDetail) {
 /**
  * 从 nanoka 角色详情生成技能/命座/被动图标路径（指向 gallery）
  * @param {object} nanoDetail - nanoka 角色 content.detail
- * @returns {object|null} { talent-e, talent-q, cons1~6, passive0~3 }，无图标时返回 null
+ * @returns {object|null} { e, q, cons1~6, passive0~3 }，无图标时返回 null
  */
 function buildImgs (nanoDetail) {
   const skills = nanoDetail.skills || []
@@ -113,11 +113,11 @@ function buildImgs (nanoDetail) {
       imgs[key] = `${GALLERY_REL}/${icon}.webp`
     }
   }
-  // 战技 Skill_S_*，爆发 Skill_E_*
+  // 战技 Skill_S_*，爆发 Skill_E_*（key 对应 getImgs 的 imgs.e/imgs.q）
   const eIcon = skills.find(s => s.promote?.['0']?.icon?.startsWith('Skill_S_'))?.promote?.['0']?.icon
   const qIcon = skills.find(s => s.promote?.['0']?.icon?.startsWith('Skill_E_'))?.promote?.['0']?.icon
-  add('talent-e', eIcon)
-  add('talent-q', qIcon)
+  add('e', eIcon)
+  add('q', qIcon)
   for (let i = 0; i < 6; i++) {
     add(`cons${i + 1}`, cons[i]?.icon)
   }
