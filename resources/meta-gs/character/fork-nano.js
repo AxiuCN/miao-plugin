@@ -14,6 +14,8 @@ import { Data } from '#miao'
 
 // nanoka 角色数据根目录（相对 app 根）
 const NANO_BASE = `${Data.getRoot()}/plugins/Atlas-Plugin/tool/nanoka-atlas-backend/nanoka-atlas-backend/data/items/简体中文/原神/角色`
+// gallery 图片相对 resources 根路径（渲染时 _res_path 前缀 + 此相对路径可访问到 gallery）
+const GALLERY_REL = '../../Atlas-Plugin/tool/nanoka-atlas-backend/nanoka-atlas-backend/gallery/gi'
 
 // 原神武器类型枚举 → miao 武器类型
 const WEAPON_MAP = {
@@ -97,6 +99,35 @@ function buildDetail (nanoDetail) {
 }
 
 /**
+ * 从 nanoka 角色详情生成技能/命座/被动图标路径（指向 gallery）
+ * @param {object} nanoDetail - nanoka 角色 content.detail
+ * @returns {object|null} { talent-e, talent-q, cons1~6, passive0~3 }，无图标时返回 null
+ */
+function buildImgs (nanoDetail) {
+  const skills = nanoDetail.skills || []
+  const passives = nanoDetail.passives || []
+  const cons = nanoDetail.constellations || []
+  const imgs = {}
+  const add = (key, icon) => {
+    if (icon) {
+      imgs[key] = `${GALLERY_REL}/${icon}.webp`
+    }
+  }
+  // 战技 Skill_S_*，爆发 Skill_E_*
+  const eIcon = skills.find(s => s.promote?.['0']?.icon?.startsWith('Skill_S_'))?.promote?.['0']?.icon
+  const qIcon = skills.find(s => s.promote?.['0']?.icon?.startsWith('Skill_E_'))?.promote?.['0']?.icon
+  add('talent-e', eIcon)
+  add('talent-q', qIcon)
+  for (let i = 0; i < 6; i++) {
+    add(`cons${i + 1}`, cons[i]?.icon)
+  }
+  for (let i = 0; i < 4; i++) {
+    add(`passive${i}`, passives[i]?.icon)
+  }
+  return Object.keys(imgs).length ? imgs : null
+}
+
+/**
  * 从 nanoka 补缺注册缺失角色
  * @param {object} meta - 原神角色 Meta 实例（Meta.create('gs', 'char')）
  */
@@ -144,6 +175,8 @@ export function addNanoPending (meta) {
       let detail = ds.content?.detail || {}
       // 从 nanoka 生成属性表，缺失时退回仅注册基础信息（面板属性显示 NaN）
       let attrDetail = buildDetail(detail)
+      // 技能/命座/被动图标路径（指向 gallery），缺失时缺图不崩
+      let imgs = buildImgs(detail)
       meta.addDataItem(id, {
         id: id * 1,
         name,
@@ -151,7 +184,8 @@ export function addNanoPending (meta) {
         star: STAR_MAP[ds.meta.rarity] || 5,
         elem: (detail.element || '').toLowerCase(),
         weapon: WEAPON_MAP[detail.weapon] || '',
-        ...(attrDetail ? { _detail: attrDetail } : {})
+        ...(attrDetail ? { _detail: attrDetail } : {}),
+        ...(imgs ? { _imgs: imgs } : {})
       })
       logger?.info(`[miao] nanoka 补缺注册角色: ${name} (${id})`)
     }

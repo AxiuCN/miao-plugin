@@ -3,6 +3,7 @@ import lodash from 'lodash'
 import { abbr, alias } from './alias.js'
 import { weaponType, weaponSet } from './extra.js'
 import { descFix } from './desc.js'
+import { addNanoPending } from './fork-nano.js'
 
 let weaponBuffs = {}
 let data = {}
@@ -48,6 +49,7 @@ for (let type in weaponType) {
 
 let meta = Meta.create('gs', 'weapon')
 meta.addData(data)
+addNanoPending(meta)
 meta.addAlias(alias)
 meta.addAbbr(abbr)
 meta.addMeta({

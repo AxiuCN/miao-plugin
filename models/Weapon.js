@@ -28,7 +28,8 @@ class Weapon extends Base {
   }
 
   get img () {
-    return `${this.isGs ? 'meta-gs' : 'meta-sr'}/weapon/${this.type}/${this.name}/icon.webp`
+    // 补缺武器注入 gallery 图片路径（fork-nano），普通武器走上游默认路径
+    return this.meta?.img || `${this.isGs ? 'meta-gs' : 'meta-sr'}/weapon/${this.type}/${this.name}/icon.webp`
   }
 
   get abbr () {

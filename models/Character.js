@@ -310,6 +310,8 @@ class Character extends Base {
     let imgs = this._imgs[cacheId]
     return {
       ...imgs,
+      // 补缺角色注入的 gallery 图标路径（fork-nano），覆盖默认 resources 路径
+      ...(this.meta?._imgs || {}),
       qFace: Cfg.get('qFace') ? (imgs.qFace || imgs.face) : imgs.face
     }
   }
