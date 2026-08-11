@@ -27,15 +27,15 @@ export const helpList = [{
   group: '游戏面板与信息查询',
   list: [{
     icon: 61,
-    title: '#角色 #角色卡片 #探索',
-    desc: '你的原神角色数据，数据来自米游社'
+    title: '#探索',
+    desc: '探索数据来自米游社'
   }, {
     icon: 63,
-    title: '#面板 #更新面板',
-    desc: '查看已经获取面板信息的角色列表'
+    title: '#面板 #更新面板 #mys更新面板',
+    desc: '查看/获取面板信息的角色列表'
   }, {
     icon: 66,
-    title: '#雷神面板 #雷神伤害',
+    title: '#胡桃面板 #丝柯克伤害',
     desc: '查看角色详细面板及伤害信息'
   }, {
     icon: 65,
@@ -47,36 +47,20 @@ export const helpList = [{
     desc: '面板替换及其他帮助信息'
   }, {
     icon: 64,
-    title: '#深渊 #深渊12层',
-    desc: '深渊数据，打完请2小时后查询'
-  }, {
-    icon: 64,
-    title: '#幻想 #幻想真境剧诗 #上期幻想',
-    desc: '幻想真境剧诗数据'
-  }, {
-    icon: 55,
-    title: '#202407幻想角色列表',
-    desc: '幻想真境剧诗入场角色查询'
+    title: '#我的胡桃最高分面板 #我的胡桃最强面板',
+    desc: '搜索圣遗物搭配，评分最高/伤害最高的面板'
   }, {
     icon: 35,
-    title: '#月谕圣牌',
-    desc: '「月谕圣牌」收藏查询'
-  }, {
-    icon: 64,
-    title: '#幽境 #幽境危战 #上期幽境',
-    desc: '幽境危战数据'
+    title: '#月谕圣牌 #月谕圣牌交换',
+    desc: '月谕圣牌收藏查询 交换匹配本群双方重复牌与缺失牌'
   }, {
     icon: 67,
     title: '#五星 #武器 #今日素材',
     desc: '你的原神角色详情数据'
   }, {
     icon: 62,
-    title: '#五星列表 #练度统计',
+    title: '#练度统计 #五星列表',
     desc: '角色列表数据'
-  }, {
-    icon: 77,
-    title: '#上传深渊数据',
-    desc: '上传您的深渊数据用于数据统计'
   }]
 }, {
   group: '资料及图片',
@@ -101,17 +85,9 @@ export const helpList = [{
     title: '#夜兰天赋 #胡桃命座',
     desc: '查看角色的天赋与命座资料'
   }, {
-    icon: 56,
-    title: '#深渊配队',
-    desc: '根据你的角色池推荐组队'
-  }, {
     icon: 78,
     title: '#角色持有 #角色0命',
     desc: '查看角色的持有率、0命统计'
-  }, {
-    icon: 77,
-    title: '#深渊使用率 #深渊出场率',
-    desc: '查看本期深渊使用或出场统计'
   }, {
     icon: 20,
     title: '#刻晴攻略',
@@ -134,16 +110,12 @@ export const helpList = [{
     desc: '札记数据，需要绑定Cookie'
   }, {
     icon: 10,
-    title: '#uid #绑定123456789',
-    desc: '查看绑定的uid 绑定uid'
+    title: '#uid',
+    desc: '查看绑定的uid'
   }, {
     icon: 22,
     title: '#我的ck #删除ck',
     desc: '查看绑定的cookie 删除cookie'
-  }, {
-    icon: 86,
-    title: '#签到',
-    desc: '米游社原神签到'
   }]
 }, {
   group: '其他查询指令',
@@ -152,25 +124,9 @@ export const helpList = [{
     title: '#日历 #日历列表',
     desc: '查看活动日历'
   }, {
-    icon: 6,
-    title: '#抽卡记录 #记录帮助',
-    desc: '统计游戏抽卡数据'
-  }, {
-    icon: 21,
-    title: '#角色统计 #武器统计',
-    desc: '按卡池统计抽卡数据'
-  }, {
     icon: 8,
     title: '十连 十连2 定轨',
     desc: '真实模拟抽卡'
-  }, {
-    icon: 74,
-    title: '添加哈哈 删除哈哈',
-    desc: '添加表情，回复哈哈触发'
-  }, {
-    icon: 79,
-    title: '#帮助 #版本 #喵喵版本',
-    desc: '其他命令'
   }]
 }, {
   group: '管理命令，仅管理员可用',

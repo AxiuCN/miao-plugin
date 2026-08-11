@@ -1,0 +1,77 @@
+{{extend elemLayout}}
+
+{{block 'css'}}
+<link rel="stylesheet" type="text/css" href="{{_res_path}}/character/profile-help.css"/>
+{{/block}}
+
+{{block 'main'}}
+<div class="help-card">
+  <span class="corner-tl"></span>
+  <span class="corner-br"></span>
+  <div class="title-box">
+    <h1>#角色面板 帮助</h1>
+  </div>
+
+  <div class="block">
+    <div class="block-title">#更新面板</div>
+    <div class="block-text">
+      获取/更新游戏内角色展柜中全部8位角色的面板数据。<br>
+      请将需要获取的角色展示在展柜中，并打开“显示角色详情”。
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <div class="block">
+    <div class="block-title">#面板</div>
+    <div class="block-text">查看已经获取面板数据的角色列表</div>
+  </div>
+  <div class="divider"></div>
+
+  <div class="block">
+    <div class="block-title">#胡桃面板、#胡桃伤害、#圣遗物列表</div>
+    <div class="block-text">查看指定角色的面板信息、伤害计算信息，以及当前已获取的面板数据中的高评分圣遗物列表</div>
+  </div>
+  <div class="divider"></div>
+
+  <div class="block">
+    <div class="block-title">#心海排行、#心海圣遗物排行、#最强排行、#最高分排行</div>
+    <div class="block-text">
+      仅群内可用，排行为当前群内排行<br>
+      Bot管理员可以通过<span class="cmd">#喵喵设置</span>设置排行限制
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- Fork 核心：面板变换 -->
+  <div class="block">
+    <div class="block-title"><span class="block-tag">Fork</span>面板变换</div>
+    <div class="block-text">
+      通过 <span class="cmd">换 / 补 / 变 / 改</span> 关键字对面板进行变换，构建“虚拟面板”，不修改已获取的真实数据，伤害数字旁显示变化差异（绿色↑ / 红色↓），可组合叠加使用：<br>
+      面板换装：<span class="cmd">#胡桃面板 换少女头</span><br>
+      属性数值变换：<span class="cmd">#胡桃面板 +30暴击 -10%大攻击</span>（百分比仅对攻/生/防按基础值计算）<br>
+      换角色/命座/天赋：<span class="cmd">#雷神面板 换90级0命天赋999</span> / <span class="cmd">#雷神面板 换90级6命天赋91212 胡桃</span><br>
+      换武器：<span class="cmd">#雷神面板 换精五稻光</span>　换圣遗物：<span class="cmd">#雷神圣遗物换赛诺圣遗物</span>　换命座：<span class="cmd">#雷神伤害2 换6命</span><br>
+      跨UID圣遗物：<span class="cmd">#心海伤害 138638352 换芭芭拉花+毛+沙+杯</span><br>
+      直接发送面板截图：触发OCR图片识别，自动解析并应用变换
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <!-- Fork 增强：指定面板图 / 最高分 / 最强 -->
+  <div class="block">
+    <div class="block-title"><span class="block-tag">Fork</span>指定面板图 / 最高分 / 最强面板</div>
+    <div class="block-text">
+      指定面板图：<span class="cmd">#胡桃面板 面板图1</span>（需安装 ProfileImg-Plugin）<br>
+      最高分面板：<span class="cmd">#我的胡桃最高分面板魔女4</span> — 回溯搜索圣遗物组合，评分最高的搭配<br>
+      最强面板：<span class="cmd">#我的胡桃最强面板魔女4</span> — 求伤害最高的搭配（需指定套装）
+    </div>
+  </div>
+  <div class="divider"></div>
+
+  <div class="block">
+    <div class="block-text red-note">
+      注：更换其他UID圣遗物或武器时，本地需要具备该UID对应角色面板数据
+    </div>
+  </div>
+</div>
+{{/block}}

@@ -2,7 +2,7 @@
 * 面板公共方法及处理
 * */
 import { Button, Character, MysApi, Player } from '#miao.models'
-import { miaoPath } from '#miao.path'
+import { Common } from '#miao'
 
 /*
 * 获取面板查询的 目标uid
@@ -69,9 +69,8 @@ export async function getProfileRefresh (e, avatar) {
 }
 
 /*
-* 面板帮助
+* 面板帮助（Fork 增强：HTML 模板渲染，含面板变换说明）
 * */
 export async function profileHelp (e) {
-  e.reply(segment.image(`file://${miaoPath}/resources/character/imgs/help.jpg`))
-  return true
+  return e.reply([await Common.render('character/profile-help', {}, { e })])
 }
