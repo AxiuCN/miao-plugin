@@ -119,7 +119,7 @@ body #container.container {
   color: #d49028;
   font-weight: bold;
   margin-bottom: 6px;
-  font-family: Number, "印品南征北战NZBZ体", NZBZ, "汉仪文黑-65W", YS, sans-serif;
+  font-family: Number, "汉仪文黑-65W", YS, PingFangSC-Medium, "PingFang SC", sans-serif;
 }
 
 .block-text {
