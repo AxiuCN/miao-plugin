@@ -13,10 +13,10 @@
   </div>
 
   <div class="block">
-    <div class="block-title">#更新面板</div>
+    <div class="block-title">#更新面板 / #mys更新面板</div>
     <div class="block-text">
-      获取/更新游戏内角色展柜中全部8位角色的面板数据。<br>
-      请将需要获取的角色展示在展柜中，并打开“显示角色详情”。
+      <span class="cmd">#更新面板</span>：获取游戏内角色展柜的面板数据，约5分钟可更新，但仅限展柜中展示的角色（最多12位）。请将需要获取的角色展示在展柜中，并打开“显示角色详情”。退出重进游戏或进入千星奇域可立即刷新。<br>
+      <span class="cmd">#mys更新面板</span>：从米游社获取全部角色面板数据，不受展柜限制，但米游社数据约2小时刷新一次
     </div>
   </div>
   <div class="divider"></div>
@@ -42,16 +42,19 @@
   </div>
   <div class="divider"></div>
 
-  <!-- Fork 核心：面板变换 -->
+  <!-- Fork 核心：面板变换（换 / 补） -->
   <div class="block">
-    <div class="block-title"><span class="block-tag">Fork</span>面板变换</div>
+    <div class="block-title"><span class="block-tag">Fork</span>面板变换：换 / 补</div>
     <div class="block-text">
-      通过 <span class="cmd">换 / 补 / 变 / 改</span> 关键字对面板进行变换，构建“虚拟面板”，不修改已获取的真实数据，伤害数字旁显示变化差异（绿色↑ / 红色↓），可组合叠加使用：<br>
-      面板换装：<span class="cmd">#胡桃面板 换少女头</span><br>
-      属性数值变换：<span class="cmd">#胡桃面板 +30暴击 -10%大攻击</span>（百分比仅对攻/生/防按基础值计算）<br>
-      换角色/命座/天赋：<span class="cmd">#雷神面板 换90级0命天赋999</span> / <span class="cmd">#雷神面板 换90级6命天赋91212 胡桃</span><br>
-      换武器：<span class="cmd">#雷神面板 换精五稻光</span>　换圣遗物：<span class="cmd">#雷神圣遗物换赛诺圣遗物</span>　换命座：<span class="cmd">#雷神伤害2 换6命</span><br>
-      跨UID圣遗物：<span class="cmd">#心海伤害 138638352 换芭芭拉花+毛+沙+杯</span><br>
+      构建“虚拟面板”，不修改已获取的真实数据，伤害数字旁显示变化差异（绿色↑ / 红色↓）。<strong>换</strong>（局部替换）与<strong>补</strong>（重设基础）是两种不同操作：<br>
+      <strong>换</strong> — 基于面板替换部件（武器 / 圣遗物 / 命座 / 天赋 / 角色 / 属性数值），结果与原存档面板对比：<br>
+      <span class="cmd">#胡桃面板 换少女头</span>　换装<br>
+      <span class="cmd">#胡桃面板 +30暴击 -10%大攻击</span>　属性数值变换（百分比仅对攻/生/防按基础值计算）<br>
+      <span class="cmd">#雷神面板 换90级6命天赋91212 胡桃</span>　换角色/命座/天赋<br>
+      <span class="cmd">#雷神面板 换精五稻光</span>　换武器　<span class="cmd">#雷神圣遗物换赛诺圣遗物</span>　换圣遗物<br>
+      <span class="cmd">#心海伤害 138638352 换芭芭拉花+毛+沙+杯</span>　跨UID圣遗物<br>
+      <strong>补</strong> — 重设面板基础（角色 / 等级 / 命座 / 天赋 / 武器），作为虚拟面板的基准，可与换叠加，伤害差异以补出的基础为基准对比：<br>
+      <span class="cmd">#雷神面板 补90级满命天赋101313 换精五雾切</span><br>
       直接发送面板截图：触发OCR图片识别，自动解析并应用变换
     </div>
   </div>
