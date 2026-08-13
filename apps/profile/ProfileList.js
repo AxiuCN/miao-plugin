@@ -13,7 +13,7 @@ const ProfileList = {
   async doRefresh (e, fromMys = false) {
     let uid = await getTargetUid(e)
     if (!uid) {
-      e._replyNeedUid || e.reply(['请先发送【#绑定+你的UID】来绑定查询目标\n星铁请使用【#星铁绑定+UID】', new Button(e).bindUid()])
+      e._replyNeedUid || e.reply(['请发送 #扫码登录', new Button(e).bindUid()])
       return true
     }
 
@@ -71,7 +71,7 @@ const ProfileList = {
   async render (e) {
     let uid = await getTargetUid(e)
     if (!uid) {
-      e._replyNeedUid || e.reply(['请先发送【#绑定+你的UID】来绑定查询目标\n星铁请使用【#星铁绑定+UID】', new Button(e).bindUid()])
+      e._replyNeedUid || e.reply(['请发送 #扫码登录', new Button(e).bindUid()])
       return true
     }
 
