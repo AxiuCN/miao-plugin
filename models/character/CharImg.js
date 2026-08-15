@@ -66,7 +66,7 @@ const CharImg = {
       }
       if (fs.existsSync(`${rPath}/${imgPath}`)) {
         let imgs = fs.readdirSync(`${rPath}/${imgPath}`).filter((file) => {
-          return /\.(png|webp)$/.test(file)
+          return /\.(png|webp|jpg|jpeg)$/.test(file)
         })
         for (let img of imgs) {
           ret.push(`${imgPath}/${encodeURIComponent(img)}`)
@@ -95,7 +95,7 @@ const CharImg = {
       // 匹配 角色名_n_... 或 角色名_n.ext（标准命名，n 即 ProfileImg 的 display n）
       let seqReg = new RegExp(`^${esc}_(\\d+)(?:_|\\.)`, 'i')
       let imgs = fs.readdirSync(`${rPath}/${imgPath}`).filter((file) => {
-        return /\.(png|webp)$/.test(file)
+        return /\.(png|webp|jpg|jpeg)$/.test(file)
       })
       let target = imgs.find((file) => {
         let m = file.match(seqReg)
