@@ -5,6 +5,31 @@ import lodash from 'lodash'
 import fetch from 'node-fetch'
 import * as cheerio from 'cheerio'
 import common from '../../../../lib/common/common.js'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
+import fs from 'node:fs'
+
+// Atlas-Plugin 本地 nanoka 数据根（纯文件读取，不依赖网络）
+// ProfileStat 位于 plugins /miao-plugin/apps/profile/，
+// 上溯 3 级到 plugins/ 根，再进入 Atlas-Plugin 的 nanoka-atlas-backend 数据目录
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const ATLAS_DATA_DIR = path.resolve(__dirname, '../../../Atlas-Plugin/tool/nanoka-atlas-backend/nanoka-atlas-backend/data')
+
+/**
+ * 读取 Atlas-Plugin 本地 nanoka 索引 map.json
+ * @returns {{version: string, records: object} | false} 本地可用返回版本与 rolecombat 记录，否则返回 false
+ */
+function getLocalRolecombatMap () {
+  try {
+    const map = JSON.parse(fs.readFileSync(path.join(ATLAS_DATA_DIR, 'map.json'), 'utf8'))
+    const records = map?.games?.gi?.locales?.zh?.pages?.rolecombat?.records
+    const version = map?.games?.gi?.game?.latestVersion
+    if (!records || !version) return false
+    return { version, records }
+  } catch (err) {
+    return false
+  }
+}
 
 const ProfileStat = {
   async stat (e) {
@@ -438,6 +463,16 @@ const ProfileStat = {
   },
 
   async getOverallMazeDataFromNanokaCc() {
+    // 优先读本地 Atlas-Plugin 的 nanoka 数据；本地不可用（未更新/未安装）才回退网络
+    const local = getLocalRolecombatMap()
+    if (local) {
+      return {
+        version: local.version,
+        data: Object.values(local.records), // { id, name, path, hasDetail }，含 path 供单幕读取
+        _local: true
+      }
+    }
+    // 回退 nanoka.cc 网络请求
     const manifest_url = 'https://static.nanoka.cc/manifest.json'
     let manifestData = false
     try {
@@ -464,13 +499,30 @@ const ProfileStat = {
   async getRequestedMazeDataFromNanokaCc(e, overallMazeData) {
     const mazeId = ProfileStat.getMazeId(e)
     if (mazeId >= 0 && mazeId < overallMazeData.data.length) {
-      const request_url = `https://static.nanoka.cc/gi/${overallMazeData.version}/zh/rolecombat/${mazeId + 3}.json`
       let currentRawMazeData = false
-      try {
-          currentRawMazeData = await (await ProfileStat.fetchWithTimeout(request_url)).json()
-      } catch (error) {
-          logger.error('请求失败:', error)
-          return false // 直接返回以停止后续逻辑
+      // 本地来源（_local）：按记录 id（= mazeId+3）读本地数据文件 content.detail
+      if (overallMazeData._local) {
+        const id = String(mazeId + 3)
+        const rec = overallMazeData.data.find(r => r.id === id)
+        if (rec) {
+          try {
+            const item = JSON.parse(fs.readFileSync(path.join(ATLAS_DATA_DIR, rec.path), 'utf8'))
+            currentRawMazeData = item?.content?.detail || false
+          } catch (error) {
+            logger.error('请求失败:', error)
+            return false // 直接返回以停止后续逻辑
+          }
+        }
+      }
+      // 本地未命中或该期不在本地数据 → 回退 nanoka.cc 网络请求
+      if (!currentRawMazeData) {
+        const request_url = `https://static.nanoka.cc/gi/${overallMazeData.version}/zh/rolecombat/${mazeId + 3}.json`
+        try {
+            currentRawMazeData = await (await ProfileStat.fetchWithTimeout(request_url)).json()
+        } catch (error) {
+            logger.error('请求失败:', error)
+            return false // 直接返回以停止后续逻辑
+        }
       }
       // 转换成和 HomDGCat 相同的格式
       const convertedInitialAvatarIds = lodash.map(
