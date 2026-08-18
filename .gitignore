@@ -22,10 +22,6 @@
 /resources/help/theme/*
 !/resources/help/theme/default
 /resources/profile/*
-!/resources/profile/super-character
-!/resources/profile/normal-character/
-/resources/profile/super-character/*
-/resources/profile/normal-character/*
 
 # 构建产物
 *.css.map
