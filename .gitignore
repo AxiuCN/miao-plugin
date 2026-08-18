@@ -39,6 +39,8 @@
 # Windows 缩略图
 Thumbs.db
 
-# Claude Code 工作区
+# Claude Code / DeepSeek Harness 工作区
 .claude/
+.dsh/
 CLAUDE.md
+AGENTS.md
