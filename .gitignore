@@ -5,7 +5,7 @@
 # 设计源文件
 *.psd
 
-# 运行时配置
+# 配置文件
 /config.js
 /components/cfg.json
 /components/setting.json
@@ -13,6 +13,8 @@
 /config/profile.js
 /config/help.js
 /config/cfg.js
+/config/alias_gs.cfg
+/config/alias_sr.cfg
 
 # 资源缓存
 /resources/miao-res-plus/
