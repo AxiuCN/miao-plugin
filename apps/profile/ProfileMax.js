@@ -608,13 +608,14 @@ export async function profileMaxScoreBuild (e, char, paramStr, game, uid) {
       }
     }
     // 武器（换层优先，补层次之），回退到目标面板武器
-    let tmpWeapon = specWeapon?.weapon
+    let tmpWeaponSrc = pc?.change?.weapon || pc?.baseChange?.weapon
+    let tmpWeapon = tmpWeaponSrc?.weapon
       ? (() => {
-          let wepInfo = Weapon.get(specWeapon.weapon, game, char.weaponType) || Weapon.get(specWeapon.weapon, game)
+          let wepInfo = Weapon.get(tmpWeaponSrc.weapon, game, char.weaponType) || Weapon.get(tmpWeaponSrc.weapon, game)
           return {
-            weapon: wepInfo?.name || specWeapon.weapon,
-            affix: Math.min(wepInfo?.maxAffix || 5, specWeapon.affix || 5),
-            level: Math.min(wepInfo?.maxLv || 90, specWeapon.level || 90)
+            weapon: wepInfo?.name || tmpWeaponSrc.weapon,
+            affix: Math.min(wepInfo?.maxAffix || 5, tmpWeaponSrc.affix || 5),
+            level: Math.min(wepInfo?.maxLv || 90, tmpWeaponSrc.level || 90)
           }
         })()
       : (targetProfile?.weapon?.name
