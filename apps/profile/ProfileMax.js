@@ -583,6 +583,75 @@ export async function profileMaxScoreBuild (e, char, paramStr, game, uid) {
   }
 
   // ============================================================
+  // 阶段 7.5：评分规则对齐收敛
+  // 搜索阶段用「探测属性」判定规则分支（probeAttrs），渲染阶段（getArtisMark）
+  // 用「虚拟面板真实属性」判定 → 两者可能不一致（如胡桃核爆/常规流的条件分支）。
+  // 此处用当前组合构建临时虚拟面板，以真实属性回验渲染端规则：
+  //   若与 bestCfg 不同 → 以渲染端规则重新搜索，迭代直至规则稳定（最多 3 次）。
+  // 收敛后阶段 8/9 基于 bestCombo/bestCfg 工作，保证摘要评分与面板渲染同规则。
+  // ============================================================
+  let MAX_RULE_ITER = 3
+  for (let iter = 0; iter < MAX_RULE_ITER; iter++) {
+    // 临时虚拟面板：圣遗物（搜索结果 + 锁定覆盖）+ 武器 + 角色基础
+    let tmpChange = {}
+    for (let arti of bestCombo) {
+      tmpChange['arti' + arti._raw.idx] = buildArtiChange(arti, isSr)
+    }
+    for (let pos of Object.keys(lockedByChange)) {
+      let lk = lockedByChange[Number(pos)]
+      tmpChange['arti' + Number(pos)] = {
+        mode: 'ocr', level: lk.arti.level || 0,
+        mainId: lk.arti.mainId, attrIds: lk.arti.attrIds,
+        ...(isSr
+          ? { id: lk.arti.id || lk.arti.name }
+          : { name: lk.arti.name, star: lk.arti.star || 5 })
+      }
+    }
+    // 武器（换层优先，补层次之），回退到目标面板武器
+    let tmpWeapon = specWeapon?.weapon
+      ? (() => {
+          let wepInfo = Weapon.get(specWeapon.weapon, game, char.weaponType) || Weapon.get(specWeapon.weapon, game)
+          return {
+            weapon: wepInfo?.name || specWeapon.weapon,
+            affix: Math.min(wepInfo?.maxAffix || 5, specWeapon.affix || 5),
+            level: Math.min(wepInfo?.maxLv || 90, specWeapon.level || 90)
+          }
+        })()
+      : (targetProfile?.weapon?.name
+          ? { ...targetProfile.weapon, affix: targetProfile.weapon.affix || 1, level: targetProfile.weapon.level || 90 }
+          : { weapon: DEF_WEAPON[char.weaponType] || '西风剑', affix: 1, level: 90 })
+    if (tmpWeapon) tmpChange.weapon = tmpWeapon
+    // 角色等级/命座/天赋（补层打底，换层覆盖）
+    let tmpChar = { ...(pc?.baseChange?.char || {}), ...(pc?.change?.char || {}) }
+    if (!lodash.isEmpty(tmpChar)) tmpChange.char = tmpChar
+
+    let tmpVirtual = ProfileChange.getProfile(uid, char.id, tmpChange, game)
+    if (!tmpVirtual?.char) break
+    let renderCfg = ArtisMarkCfg.getCfg(tmpVirtual)
+    if (!renderCfg) break
+    if (renderCfg.classTitle === bestCfg.classTitle) break // 已收敛
+
+    // 规则错位：以渲染端规则重新搜索
+    bestCfg = renderCfg
+    bestCfg.id = char.id
+    let scoreFn = (arti) => recalcArtisMark(arti, bestCfg, game, char.elem || '')
+    bestCombo = findBestCombination(artsByPos, setConstraints, scoreFn, POS_COUNT)
+    if (!bestCombo || bestCombo.length !== POS_COUNT) {
+      bestCombo = null
+      break
+    }
+    bestTotal = bestCombo.reduce((s, a) => s + (a.score || 0), 0)
+  }
+
+  if (!bestCombo) {
+    let label = setConstraints.length
+      ? setConstraints.map(c => c.abbr + c.count).join('+')
+      : '散件'
+    e.reply(`未找到满足「${label}」约束的${isSr ? '遗器' : '圣遗物'}组合，可能对应套装数量不足`)
+    return null
+  }
+
+  // ============================================================
   // 阶段 8：文本摘要
   // ============================================================
   let totalMark = Math.round(bestTotal * 10) / 10
