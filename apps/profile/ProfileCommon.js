@@ -72,5 +72,7 @@ export async function getProfileRefresh (e, avatar) {
 * 面板帮助（Fork 增强：HTML 模板渲染，含面板变换说明）
 * */
 export async function profileHelp (e) {
-  return e.reply([await Common.render('character/profile-help', {}, { e })])
+  // Common.render 无 retType 时内部已通过 e.reply 发送图片并返回 true，直接 return 即可
+  // （若再用 e.reply 包裹会重复回复，且 render 返回的 true 会作为消息参数导致发送失败）
+  return await Common.render('character/profile-help', {}, { e })
 }
