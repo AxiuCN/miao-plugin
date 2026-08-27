@@ -164,15 +164,23 @@ const ProfileChange = {
       let target = isBase ? baseChange : change
       let char = target.char || {}
 
-      // 匹配 +/- 属性变换
-      if (/^[+\-]/.test(txt)) {
-        let sm = parseStatTransform(txt)
-        if (sm) {
-          sm.isBase = isBase
-          if (!target.statMods) target.statMods = []
-          target.statMods.push(sm)
+      // 匹配 +/- 属性变换（支持空格分隔多属性：+30暴击 -10%大攻击）
+      // 先剥离 token 内全部属性片段入 statMods，剩余文本继续走后续匹配（属性+换装共存）
+      let attrReg = /[+\-]\d+(?:\.\d+)?\s*%?[\u4e00-\u9fa5A-Za-z]+/g
+      let attrFrags = txt.match(attrReg) || []
+      if (attrFrags.length > 0) {
+        for (let frag of attrFrags) {
+          let sm = parseStatTransform(frag)
+          if (sm) {
+            sm.isBase = isBase
+            if (!target.statMods) target.statMods = []
+            target.statMods.push(sm)
+          }
         }
-        return true
+        txt = lodash.trim(txt.replace(attrReg, ' '))
+        if (!txt) {
+          return true
+        }
       }
 
       // 匹配圣遗物
