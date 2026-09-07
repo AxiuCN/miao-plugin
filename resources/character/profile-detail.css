@@ -427,6 +427,29 @@ body {
   line-height: 40px;
   width: 32%;
 }
+/* 伤害类型过长：自动换行，避免挤压 暴击/期望 数值列；
+   数值列：禁止折行 + 保底宽度，保证 9 位数（含千分位）完整单行显示；
+   profile-mode 数值列 32%→30%（40%+30%+30%=100%，两列均分）；
+   dmg-mode 序号列收窄回 5% */
+.dmg-list .tr > div {
+  vertical-align: middle;
+}
+.dmg-list .tr .title.dmg-title {
+  white-space: normal;
+  overflow-wrap: break-word;
+  line-height: 20px;
+}
+.dmg-list .dmg .value {
+  white-space: nowrap;
+  min-width: 150px;
+}
+.profile-mode .dmg .value {
+  width: 30%;
+}
+.dmg-mode .dmg-idx,
+.weapon-mode .dmg-idx {
+  min-width: 0 !important;
+}
 .dmg-notice {
   font-size: 12px;
   text-align: right;
