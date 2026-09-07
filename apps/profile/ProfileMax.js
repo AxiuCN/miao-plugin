@@ -533,7 +533,12 @@ export async function profileMaxScoreBuild (e, char, paramStr, game, uid) {
   let baseProfile = {
     char,
     weapon: targetProfile?.weapon || { name: '', affix: 1 },
-    artis: { is: () => false, getSetData: () => ({ sets: {}, abbrs: [] }) },
+    // 兜底假 artis：需实现 names getter（artis.js 直接访问 artis.names，参照真实 Artis.names= getSetData().names）
+    artis: targetProfile?.artis || {
+      is: () => false,
+      getSetData: () => ({ sets: {}, abbrs: [], names: [] }),
+      get names () { return this.getSetData().names || [] }
+    },
     game, isGs, isSr,
     attr: {}, elem: char.elem,
     cons: targetProfile?.cons || 0, id: char.id,
@@ -1019,7 +1024,12 @@ export async function profileMaxDmgBuild (e, char, paramStr, game, uid, routeDmg
   let baseProfile = {
     char,
     weapon: targetProfile?.weapon || { name: '', affix: 1 },
-    artis: { is: () => false, getSetData: () => ({ sets: {}, abbrs: [] }) },
+    // 兜底假 artis：需实现 names getter（artis.js 直接访问 artis.names，参照真实 Artis.names= getSetData().names）
+    artis: targetProfile?.artis || {
+      is: () => false,
+      getSetData: () => ({ sets: {}, abbrs: [], names: [] }),
+      get names () { return this.getSetData().names || [] }
+    },
     game, isGs, isSr,
     attr: {}, elem: char.elem,
     cons: targetProfile?.cons || 0, id: char.id,

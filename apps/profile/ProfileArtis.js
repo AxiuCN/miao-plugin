@@ -320,7 +320,11 @@ function buildFakeProfileAndGetCfg (char, game) {
   let fakeProfile = {
     char,
     weapon: { name: '', affix: 1 },
-    artis: { is: () => false, getSetData: () => ({ sets: {}, abbrs: [] }) },
+    artis: {
+      is: () => false,
+      getSetData: () => ({ sets: {}, abbrs: [], names: [] }),
+      get names () { return this.getSetData().names || [] }
+    },
     game,
     isGs: game === 'gs',
     isSr: game === 'sr',
