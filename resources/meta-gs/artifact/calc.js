@@ -174,10 +174,12 @@ const buffs = {
   翠绿之影: {
     2: attr('dmg', 15, '风'),
     4: {
-      title: '扩散反应造成的伤害提升60%，降低对应元素抗性40%',
+      title: '扩散反应造成的伤害提升60%，降低对应元素抗性40%；星扩散反应造成的伤害提升20%',
       data: {
         swirl: 60,
-        fykx: 40
+        fykx: 40,
+        stellarSwirl: 20,
+        stellarVortex: 20
       }
     }
   },
@@ -630,11 +632,37 @@ const buffs = {
   影中沉凝的幻灭: {
     2: attr('atkPct', 18),
     4: {
+      check: ({ element }) => ['雷', '冰'].includes(element),
       title: '超导反应造成的伤害提升[superConduct]%；星超导反应造成的伤害提升[stellarConduct]%；攻击受到超导或星超导反应影响的敌人暴击率提高[cpct]%',
       data: {
         superConduct: 80,
         stellarConduct: 40,
         cpct: 16
+      }
+    }
+  },
+
+  炉火融炼之心: {
+    2: attr('atkPct', 18),
+    4: {
+      check: ({ element }) => ['雷', '风', '冰'].includes(element),
+      title: '装备者触发星烁反应或造成星烁反应伤害后的12秒内，攻击力提升[atkPct]%，队伍中附近的所有角色造成的星烁反应伤害提升[stellarConduct]%。',
+      data: {
+        atkPct: 12,
+        stellarConduct: 50
+      }
+    }
+  },
+
+  血红之证: {
+    2: attr('atkPct', 18),
+    4: {
+      check: ({ element }) => ['风', '冰'].includes(element),
+      title: '装备者触发星扩散反应后的10秒内，暴击率提升[cpct]%，星扩散反应伤害提升[stellarSwirl]%。',
+      data: {
+        cpct: 16,
+        stellarSwirl: 40,
+        stellarVortex: 40
       }
     }
   }
