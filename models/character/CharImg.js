@@ -73,7 +73,7 @@ const CharImg = {
       }
       if (fs.existsSync(`${rPath}/${imgPath}`)) {
         let imgs = fs.readdirSync(`${rPath}/${imgPath}`).filter((file) => {
-          return /\.(png|webp|jpg|jpeg)$/.test(file)
+          return /\.(png|webp)$/.test(file)
         })
         for (let img of imgs) {
           ret.push(`${imgPath}/${encodeURIComponent(img)}`)
@@ -119,14 +119,14 @@ const CharImg = {
   },
 
   /**
-   * 合并读取指定角色在对应层级的全部面板图文件（多图库源，含平铺层）
+   * 合并读取指定角色的面板图候选列表
    * 同层级的所有图库源合并，源不存在/无权限/为空时跳过，不影响其他源
    * 支持 {源}/{tier}/{角色名} 与平铺的 {源}/{角色名} 两种布局（目录或单文件均可）
    * @param name 角色名
    * @param isSuper 是否读取彩蛋立绘（满命/ACE/三皇冠）目录；平铺层仅在普通立绘时读取
-   * @returns {string[]} 图片的绝对路径列表
+   * @returns {string[]} 可被模板引用的图片路径（resources相对路径或file://绝对路径）
    */
-  getProfileImgFilesAll (name, isSuper = false) {
+  getProfileImgPool (name, isSuper = false) {
     let tier = isSuper ? 'super-character' : 'normal-character'
     let files = []
     lodash.forEach(CharImg.getProfileImgSrc(), (src) => {
@@ -136,17 +136,7 @@ const CharImg = {
         files = files.concat(CharImg.getProfileImgFiles(src, name))
       }
     })
-    return files
-  },
-
-  /**
-   * 合并读取指定角色的面板图候选列表
-   * @param name 角色名
-   * @param isSuper 是否读取彩蛋立绘（满命/ACE/三皇冠）目录；平铺层仅在普通立绘时读取
-   * @returns {string[]} 可被模板引用的图片路径（resources相对路径或file://绝对路径）
-   */
-  getProfileImgPool (name, isSuper = false) {
-    return lodash.map(CharImg.getProfileImgFilesAll(name, isSuper), (file) => CharImg.getProfileImgRes(file))
+    return lodash.map(files, (file) => CharImg.getProfileImgRes(file))
   },
 
   /**
@@ -200,7 +190,8 @@ const CharImg = {
 
   /**
    * 按序号选择指定面板图（ProfileImg 命名：角色名_n_作者_来源.ext，n 即 display 序号）
-   * 支持多图库源与平铺层；彩蛋立绘优先于普通立绘，找不到返回 false
+   * fork 私有：只基于上游公开的 getProfileImgPool 取候选，不改动上游实现
+   * 彩蛋立绘优先于普通立绘，找不到返回 false
    * @param name 角色名
    * @param isSuper 是否优先在彩蛋立绘目录中查找
    * @param index 面板图序号
@@ -209,11 +200,11 @@ const CharImg = {
   getProfileImgByIndex (name, isSuper, index) {
     let esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
     let seqReg = new RegExp(`^${esc}_(\\d+)(?:_|\\.)`, 'i')
-    for (let tier of isSuper ? [true, false] : [false]) {
-      for (let file of CharImg.getProfileImgFilesAll(name, tier)) {
-        let m = path.basename(file).match(seqReg)
+    for (let tier of isSuper ? ['super', 'normal'] : ['normal']) {
+      for (let img of CharImg.getProfileImgPool(name, tier === 'super')) {
+        let m = decodeURIComponent(img.split('/').pop()).match(seqReg)
         if (m && parseInt(m[1], 10) === index) {
-          return CharImg.getProfileImgRes(file)
+          return img
         }
       }
     }
