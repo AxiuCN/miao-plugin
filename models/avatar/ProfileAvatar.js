@@ -120,28 +120,26 @@ const ProfileAvatar = {
           break
       }
     }
-    // 指定面板图：按序号选图，找不到回退随机
+    // 指定面板图：按序号选图（支持多图库源），找不到回退随机
     if (profile._panelImgIdx && profile._panelImgIdx > 0) {
-      let imgPaths = isSuper
-        ? [`profile/super-character/${name}`, `profile/normal-character/${name}`]
-        : [`profile/normal-character/${name}`]
-      let result = CharImg.getImgByIndex(imgPaths, profile._panelImgIdx)
+      let result = CharImg.getProfileImgByIndex(name, isSuper, profile._panelImgIdx)
       if (result) {
         return result
       }
     }
 
+    let defImgs = [`${nPath}/imgs/splash${costume}.webp`, `/${nPath}/imgs/splash.webp`]
     if (isSuper) {
-      return CharImg.getRandomImg(
-        [`profile/super-character/${name}`, `profile/normal-character/${name}`],
-        [`${nPath}/imgs/splash0.webp`, `${nPath}/imgs/splash${costume}.webp`, `/${nPath}/imgs/splash.webp`]
-      )
-    } else {
-      return CharImg.getRandomImg(
-        [`profile/normal-character/${name}`],
-        [`${nPath}/imgs/splash${costume}.webp`, `/${nPath}/imgs/splash.webp`]
-      )
+      defImgs.unshift(`${nPath}/imgs/splash0.webp`)
     }
+    // 自定义面板图：彩蛋立绘（super）优先于普通立绘，同层级合并所有图库源
+    for (let tier of isSuper ? ['super', 'normal'] : ['normal']) {
+      let imgs = CharImg.getProfileImgPool(name, tier === 'super')
+      if (imgs.length > 0) {
+        return lodash.sample(imgs)
+      }
+    }
+    return CharImg.getRandomImg([], defImgs)
   },
 
   getServ (uid, game = 'gs') {
