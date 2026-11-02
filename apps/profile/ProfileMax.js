@@ -1013,8 +1013,8 @@ export async function profileMaxDmgBuild (e, char, paramStr, game, uid, routeDmg
   if (game === 'gs') {
     try {
       let selfUser = await MysApi.initUser(e)
-      if (selfUser) enemyLv = await selfUser.getCfg('char.enemyLv', 103)
-    } catch (_) { enemyLv = 103 }
+      if (selfUser) enemyLv = await selfUser.getCfg('char.enemyLv', 110)
+    } catch (_) { enemyLv = 110 }
   }
 
   // ============================================================
