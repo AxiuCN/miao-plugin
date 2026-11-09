@@ -9,26 +9,56 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import fs from 'node:fs'
 
-// Atlas-Plugin 本地 nanoka 数据根（纯文件读取，不依赖网络）
+// Atlas-Plugin Hesperides 数据根（纯文件读取，不依赖网络）
 // ProfileStat 位于 plugins /miao-plugin/apps/profile/，
-// 上溯 3 级到 plugins/ 根，再进入 Atlas-Plugin 的 nanoka-atlas-backend 数据目录
+// 上溯 3 级到 plugins/ 根，再进入 Atlas-Plugin 的 Hesperides 数据目录
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const ATLAS_DATA_DIR = path.resolve(__dirname, '../../../Atlas-Plugin/tool/nanoka-atlas-backend/nanoka-atlas-backend/data')
+const ATLAS_DATA_DIR = path.resolve(__dirname, '../../../Atlas-Plugin/tool/Hesperides/Hesperides/data')
+
+// 玉璃剧诗怪物中文名缓存（icon → 中文名），首次使用时从 nanoka 怪物图鉴构建
+const nanoMonsterNameCache = new Map()
+let nanoMonsterNameLoaded = false
 
 /**
- * 读取 Atlas-Plugin 本地 nanoka 索引 map.json
- * @returns {{version: string, records: object} | false} 本地可用返回版本与 rolecombat 记录，否则返回 false
+ * 读取 Atlas-Plugin 本地 nanoka 剧诗索引（Hesperides manifest）
+ * @returns {{version: string, records: object[]} | false} 本地可用返回版本与记录（id/path），否则返回 false
  */
 function getLocalRolecombatMap () {
   try {
-    const map = JSON.parse(fs.readFileSync(path.join(ATLAS_DATA_DIR, 'map.json'), 'utf8'))
-    const records = map?.games?.gi?.locales?.zh?.pages?.rolecombat?.records
-    const version = map?.games?.gi?.game?.latestVersion
-    if (!records || !version) return false
-    return { version, records }
+    const manifest = JSON.parse(fs.readFileSync(path.join(ATLAS_DATA_DIR, 'manifest.json'), 'utf8'))
+    const channel = manifest?.channels?.['nanoka:gi:rolecombat']
+    const ids = channel?.ids
+    if (!ids?.length) return false
+    return {
+      version: channel.version || '',
+      records: ids.map((id) => ({ id: String(id), path: `records/gi/nanoka/rolecombat/${id}.json` }))
+    }
   } catch (err) {
     return false
   }
+}
+
+/**
+ * 通过玉璃记录的怪物 icon 反查 nanoka 图鉴中文名
+ * @param {string} icon 怪物图标名，如 UI_MonsterIcon_xxx
+ * @returns {string|false} 中文名，未收录返回 false
+ */
+function getMonsterNameByIcon (icon) {
+  if (!icon) return false
+  if (!nanoMonsterNameLoaded) {
+    nanoMonsterNameLoaded = true
+    try {
+      const dir = path.join(ATLAS_DATA_DIR, 'records/gi/nanoka/monster')
+      for (const file of fs.readdirSync(dir)) {
+        if (!file.endsWith('.json')) continue
+        try {
+          const rec = JSON.parse(fs.readFileSync(path.join(dir, file), 'utf8'))
+          if (rec?.icon && rec?.zh) nanoMonsterNameCache.set(rec.icon, rec.zh)
+        } catch (err) { /* 单条损坏忽略 */ }
+      }
+    } catch (err) { /* 图鉴目录缺失时静默，怪物段降级为省略 */ }
+  }
+  return nanoMonsterNameCache.get(icon) || false
 }
 
 const ProfileStat = {
@@ -163,80 +193,62 @@ const ProfileStat = {
     return response;
   },
 
+  /**
+   * 读取本地玉璃（Hesperides）剧诗期表，顶替已失效的 homdgcat.wiki 数据源
+   * @returns {{overallMazeData: object[], levelMapping: object, monsterMapping: object} | false}
+   */
   async getOverallMazeData() {
-    const request_url = 'https://homdgcat.wiki/gi/CH/maze.js'
-    let resData = false
+    let periods
     try {
-        resData = await (await ProfileStat.fetchWithTimeout(request_url)).text()
+      const periodsData = JSON.parse(fs.readFileSync(path.join(ATLAS_DATA_DIR, 'periods.json'), 'utf8'))
+      periods = lodash.get(periodsData, 'games.gi.alioth.theater') || []
     } catch (error) {
-        logger.error('请求失败:', error)
-        return false // 直接返回以停止后续逻辑
-    }
-    let match = /var _overall = (.*?)var/s.exec(resData)
-    let overallMazeData = []
-    if (match) {
-      overallMazeData = JSON.parse(match[1])
-    } else {
-      logger.error('响应内容格式不对劲')
+      logger.error('读取本地玉璃剧诗期表失败:', error)
       return false
     }
-
-    match = /var _mp = (.*?)var/s.exec(resData)
-    let levelMapping = {}
-    if (match) {
-      levelMapping = JSON.parse(match[1])
-    } else {
-      logger.error('响应内容格式不对劲')
+    if (!periods.length) {
+      logger.error('本地玉璃剧诗期表为空')
       return false
     }
-
-    match = /var _mons = (.*?)var/s.exec(resData)
-    let monsterMapping = {}
-    if (match) {
-      monsterMapping = JSON.parse(match[1])
-    } else {
-      logger.error('响应内容格式不对劲')
-      return false
-    }
-
-    return { overallMazeData, levelMapping, monsterMapping }
+    // 按期开启时间排序，索引与 miao 的月份索引（2024-07 期起）对齐
+    const overallMazeData = lodash.sortBy(periods, 'begin').map((p) => ({
+      id: String(p.id),
+      begin: p.begin,
+      end: p.end
+    }))
+    return { overallMazeData, levelMapping: {}, monsterMapping: {} }
   },
 
-  getMonsterInfo(currentMazeData, levelMapping, monsterMapping) {
-    let chambers = currentMazeData.Chambers
-    let displayedChambers = {
-      '第三幕': chambers[0][2],
-      '第六幕': chambers[1][2],
-      '第八幕': chambers[2][1],
-      '第十幕': chambers[3][1],
-      '圣牌挑战 I': chambers[4][0],
-      '圣牌挑战 II': chambers[4][1]
+  /**
+   * 从玉璃剧诗记录提取指定幕的怪物信息
+   * 玉璃记录用 Chambers（_id=1..12）+ MP（配置→怪物 id）+ Monsters（怪物 id→icon），
+   * 第三/六/八/十幕与圣牌挑战分别对应 _id 3/6/8/10 与 11/12；早期期数缺圣牌关卡，缺失即跳过
+   * @param {object} currentMazeData 玉璃剧诗记录
+   * @returns {string} 形如「第三幕：xxx、yyy（70s）」的多行文本
+   */
+  getMonsterInfo(currentMazeData) {
+    const chambers = currentMazeData?.Chambers || []
+    const levelMapping = currentMazeData?.MP || {}
+    const monsterIcons = currentMazeData?.Monsters || {}
+    const displayedChambers = {
+      '第三幕': 3,
+      '第六幕': 6,
+      '第八幕': 8,
+      '第十幕': 10,
+      '圣牌挑战 I': 11,
+      '圣牌挑战 II': 12
     }
     let monsterInfo = []
-    for (let [k, v] of Object.entries(displayedChambers)) {
-      if (v) {
-        let chamberInfo = `${k}：`
-        let levelId = v.Configs[0]
-        let time = v.Time
-        if (levelId) {
-          let monsterIds = levelMapping[Number(levelId)]
-          if (monsterIds) {
-            let monsterNames = []
-            for (let monsterId of monsterIds) {
-              let monsterName = monsterMapping[Number(monsterId)].Name
-              if (monsterName) {
-                // 处理：删掉所有的 html 标签
-                // e.g., <color style='color:#80C0FF;'>(水)</color><color style='color:#FFE699;'>古岩龙蜥</color>
-                monsterName = monsterName.replace(/<.*?>/g, '')
-                monsterNames.push(monsterName)
-              }
-            }
-            chamberInfo += monsterNames.join('、')
-            chamberInfo += `（${time}）`
-          }
-        }
-        monsterInfo.push(chamberInfo)
-      }
+    for (let [name, chamberId] of Object.entries(displayedChambers)) {
+      let chamber = chambers.find((item) => item?._id === chamberId)
+      if (!chamber) continue
+      let monsterIds = levelMapping[Number(chamber.Configs?.[0])]
+      if (!monsterIds) continue
+      let monsterNames = lodash.compact(lodash.map(monsterIds, (id) => getMonsterNameByIcon(monsterIcons[id])))
+      if (monsterNames.length === 0) continue
+      let chamberInfo = `${name}：${monsterNames.join('、')}`
+      if (chamber.Time) chamberInfo += `（${chamber.Time}）`
+      monsterInfo.push(chamberInfo)
     }
     return monsterInfo.join('\n')
   },
@@ -507,7 +519,7 @@ const ProfileStat = {
         if (rec) {
           try {
             const item = JSON.parse(fs.readFileSync(path.join(ATLAS_DATA_DIR, rec.path), 'utf8'))
-            currentRawMazeData = item?.content?.detail || false
+            currentRawMazeData = item?.detail || item?.content?.detail || false
           } catch (error) {
             logger.error('请求失败:', error)
             return false // 直接返回以停止后续逻辑
@@ -592,11 +604,35 @@ const ProfileStat = {
     return mazeId
   },
 
+  /**
+   * 从本地玉璃期表定位目标期并读取记录文件
+   * 优先按「期开启日所在月」匹配（与 miao 原 #202xxx 语义一致），回退期区间与月份索引
+   * @param {object} e 消息事件
+   * @param {object[]} overallMazeData 玉璃期表（含 id/begin/end）
+   * @returns {object|false} 玉璃剧诗记录
+   */
   extractRequestedMazeData(e, overallMazeData) {
-    const mazeId = ProfileStat.getMazeId(e)
-    if (mazeId >= 0 && mazeId < overallMazeData.length) {
-      return overallMazeData[mazeId]
-    } else {
+    const match = /202(\d{3})/.exec(e.msg || '')
+    if (!match) return false
+    const month = `202${match[1]}`
+    const monthPrefix = `${month.slice(0, 4)}-${month.slice(4, 6)}`
+    let period = overallMazeData.find((item) => String(item.begin || '').slice(0, 7) === monthPrefix)
+    if (!period) {
+      // 兼容期开启日不在月首的情况：目标月首日落在期区间内
+      const monthStart = `${monthPrefix}-01`
+      period = overallMazeData.find((item) => item.begin && item.end && item.begin <= monthStart && monthStart < item.end)
+    }
+    if (!period) {
+      const mazeId = ProfileStat.getMazeId(e)
+      if (mazeId >= 0 && mazeId < overallMazeData.length) {
+        period = overallMazeData[mazeId]
+      }
+    }
+    if (!period) return false
+    try {
+      return JSON.parse(fs.readFileSync(path.join(ATLAS_DATA_DIR, 'records/gi/alioth/theater', `${period.id}.json`), 'utf8'))
+    } catch (error) {
+      logger.error('读取本地玉璃剧诗数据失败:', error)
       return false
     }
   },
@@ -745,7 +781,7 @@ const ProfileStat = {
       let overallMazeData
       let levelMapping, monsterMapping
       if (infoSource == 1) {
-        datasetName = 'HomDGCat'
+        datasetName = '玉璃'
         const mazeData = await ProfileStat.getOverallMazeData() // data
         overallMazeData = mazeData.overallMazeData
         levelMapping = mazeData.levelMapping
