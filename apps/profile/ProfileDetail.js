@@ -278,7 +278,7 @@ let ProfileDetail = {
     if (e._profile && e._panelImgIdx) {
       e._profile._panelImgIdx = e._panelImgIdx
     }
-    let data = profile.getData('name,abbr,cons,level,talent,dataSource,updateTime,imgs,costumeSplash')
+    let data = profile.getData('name,abbr,cons,exCons,level,talent,dataSource,updateTime,imgs,costumeSplash')
     if (isSr) {
       let treeData = []
       let treeMap = {}
